@@ -1,0 +1,4 @@
+sqlalchemy==2.0.19
+psycopg2-binary==2.9.6
+lazydev-utils==0.1.6
+pandas==2.0.3
