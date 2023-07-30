@@ -8,7 +8,7 @@ import shutil
 from sqlalchemy.orm import Session
 from lazyutils.config.Configuration import ConfigFromEnv
 
-from models.BankStatements import ProcessedFiles, CategoryMap, Category, Subcategory
+from models.BankStatements import ProcessedFiles, CategoryMap, Category, Subcategory, Bank, BankStatement
 
 
 class BankDataMerging:
@@ -65,26 +65,52 @@ class BankDataMerging:
         scid = session.query(Subcategory).filter_by(name='Others').first().id
         return cid, scid
 
-    def merge_bank_stament_data(self, file_path):
-        raise NotImplementedError
+    def build_bank_statement(self, session: Session, bankname: str, date, amount, description, method) -> bool:
+        """
 
+        :rtype: bool - True if any bank_statement was updated or inserted and False if any wasn't updated
+        :param session: Session
+        :param bankname: str
+        :param date: datetime
+        :param amount: float
+        :param description: str
+        :param method: str
+        """
+        # Get the bank_id for Credit
+        credit = session.query(Bank).filter_by(name=bankname).first()
 
-class ItauDataMerging(BankDataMerging):
-    def merge_bank_stament_data(self, file_path):
-        raise NotImplementedError
+        # Get the category and subcategory for the statement
+        category_id, subcategory_id = self.define_category(description, session)
 
-        # Logic for merging Itau data from the file_path
-        # merged_data = pd.read_excel(file_path)
-        # Additional Itau-specific merging steps
-        # return merged_data
+        # Check if the statement already exists in the models
+        existing_statement = session.query(BankStatement).filter_by(
+            bank_id=credit.id, date=date, amount=amount, description=description, method=method
+        ).first()
 
+        if existing_statement:
+            if existing_statement.category_id == category_id and existing_statement.subcategory_id == subcategory_id:
+                logging.info(f"Skipping duplicate statement: {date}, {amount}, {description}")
+                return False
+            else:
+                existing_statement.category_id = category_id
+                existing_statement.subcategory_id = subcategory_id
+                return True
+        else:
 
-class XPDataMerging(BankDataMerging):
-    def merge_bank_stament_data(self, file_path):
-        # Logic for merging XP data from the file_path
-        # Assuming XP data is in JSON format
-        # merged_data = pd.read_json(file_path)
-        # Additional XP-specific merging steps
-        # return merged_data
+            # Create and add a new bank statement
+            statement = BankStatement(
+                bank_id=credit.id,
+                date=date,
+                amount=amount,
+                description=description,
+                method=method,
+                category_id=category_id,
+                subcategory_id=subcategory_id
+            )
 
+            session.add(statement)
+
+            return True
+
+    def merge_bank_statement_data(self, file_path):
         raise NotImplementedError

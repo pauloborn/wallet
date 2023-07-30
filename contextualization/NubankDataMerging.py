@@ -14,7 +14,7 @@ from models.base import engine
 
 class NubankDataMerging(BankDataMerging):
 
-    def merge_bank_stament_data(self, csv_folder):
+    def merge_bank_statement_data(self, csv_folder):
         logging.info(f"Starting Nubank account statement process")
 
         csv_files = [file for file in os.listdir(csv_folder) if file.startswith("NU_")]
@@ -37,37 +37,14 @@ class NubankDataMerging(BankDataMerging):
                         amount = float(row['Valor'].replace(',', '.'))
                         description = row['Descrição']
 
-                        # Get the bank_id for Nubank
-                        nubank = session.query(Bank).filter_by(name='Nubank').first()
-
-                        # Get the category and subcategory for the statement
-                        category_id, subcategory_id = self.define_category(description, session)
-
-                        # Check if the statement already exists in the models
-                        existing_statement = session.query(BankStatement).filter_by(
-                            bank_id=nubank.id, date=date, amount=amount, description=description, method='Account'
-                        ).first()
-
-                        if existing_statement:
-                            if existing_statement.category_id == category_id and existing_statement.subcategory_id == subcategory_id:
-                                logging.info(f"Skipping duplicate statement: {date}, {amount}, {description}")
-                            else:
-                                existing_statement.category_id = category_id
-                                existing_statement.subcategory_id = subcategory_id
-                        else:
-
-                            # Create and add a new bank statement
-                            statement = BankStatement(
-                                bank_id=nubank.id,
-                                date=date,
-                                amount=amount,
-                                description=description,
-                                method='Account',
-                                category_id=category_id,
-                                subcategory_id=subcategory_id
-                            )
-
-                            session.add(statement)
+                        if self.build_bank_statement(
+                            session=session,
+                            bankname='Nubank',
+                            date=date,
+                            amount=amount,
+                            description=description,
+                            method='Account'
+                        ):
                             lines_loaded += 1
 
                     # Update the list of processed files
