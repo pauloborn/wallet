@@ -1,7 +1,7 @@
 # Use an official PostgreSQL image as the base image
 FROM postgres:latest
 
-# Environment variables for PostgreSQL database, user, and password
+# Environment variables for PostgreSQL models, user, and password
 ENV POSTGRES_DB finance
 ENV POSTGRES_USER finance
 ENV POSTGRES_PASSWORD finance
@@ -15,8 +15,8 @@ ENV CONFIG_PATH /app
 #COPY ./wallet.py /app/wallet.py
 #COPY ./requirements.txt /app/requirements.txt
 #COPY ./config /app/config
-COPY ./database/postgres_init.sql /docker-entrypoint-initdb.d/
-#COPY ./database/* /app/database/
+COPY models/postgres_init.sql /docker-entrypoint-initdb.d/
+#COPY ./models/* /app/models/
 
 # Install required dependencies
 RUN apt-get update \
@@ -31,4 +31,4 @@ EXPOSE 5432
 WORKDIR /app
 
 # Run the Python script (you can replace "your_python_script.py" with the actual filename)
-#CMD ["python3", "database/main.py"]
+#CMD ["python3", "models/main.py"]

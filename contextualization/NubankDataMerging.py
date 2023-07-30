@@ -8,8 +8,8 @@ import datetime
 from sqlalchemy.orm import Session
 
 from contextualization.BankDataMerging import BankDataMerging
-from database.BankStatements import Bank, BankStatement
-from database.base import engine
+from models.BankStatements import Bank, BankStatement
+from models.base import engine
 
 
 class NubankDataMerging(BankDataMerging):
@@ -38,20 +38,30 @@ class NubankDataMerging(BankDataMerging):
                         # Get the bank_id for Nubank
                         nubank = session.query(Bank).filter_by(name='Nubank').first()
 
-                        # Check if the statement already exists in the database
+                        # Get the category and subcategory for the statement
+                        category_id, subcategory_id = self.define_category(description, session)
+
+                        # Check if the statement already exists in the models
                         existing_statement = session.query(BankStatement).filter_by(
                             bank_id=nubank.id, date=date, amount=amount, description=description
                         ).first()
 
                         if existing_statement:
-                            logging.info(f"Skipping duplicate statement: {date}, {amount}, {description}")
+                            if existing_statement.category_id == category_id and existing_statement.subcategory_id == subcategory_id:
+                                logging.info(f"Skipping duplicate statement: {date}, {amount}, {description}")
+                            else:
+                                existing_statement.category_id = category_id
+                                existing_statement.subcategory_id = subcategory_id
                         else:
+
                             # Create and add a new bank statement
                             statement = BankStatement(
                                 bank_id=nubank.id,
                                 date=date,
                                 amount=amount,
-                                description=description
+                                description=description,
+                                category_id=category_id,
+                                subcategory_id=subcategory_id
                             )
 
                             session.add(statement)
@@ -60,7 +70,7 @@ class NubankDataMerging(BankDataMerging):
                     # Update the list of processed files
                     self.update_processed_file(file, 'Processed', lines_loaded, session)
 
-                    # Commit the changes to the database and close the session after processing each file
+                    # Commit the changes to the models and close the session after processing each file
                     session.commit()
 
                 # Move the processed file to the 'processed_files' folder

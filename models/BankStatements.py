@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
-from database.base import Base, engine
+from models.base import Base, engine
 
 ModelBase = Base
 
@@ -18,8 +18,24 @@ class Bank(ModelBase):
 class Category(Base):
     __tablename__ = 'category'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), unique=True, nullable=False)
+
+
+class Subcategory(Base):
+    __tablename__ = 'subcategory'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
+    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
+
+
+# Define the CategoryMap table
+class CategoryMap(Base):
+    __tablename__ = 'category_map'
+    id = Column(Integer, primary_key=True)
+    statement_name = Column(String, unique=True, nullable=False)
+    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
+    subcategory_id = Column(Integer, ForeignKey('subcategory.id'), nullable=False)
 
 
 # Define the BankStatements table
@@ -32,13 +48,13 @@ class BankStatement(ModelBase):
     amount = Column(Numeric, nullable=False)
     description = Column(String, nullable=False)
 
-    # Add foreign keys to the Category and StatementCategory tables
+    # Add foreign keys to the Category and SubCategory tables
     category_id = Column(Integer, ForeignKey('category.id'))
-    statement_category_id = Column(Integer, ForeignKey('statement_category.id'))
+    subcategory_id = Column(Integer, ForeignKey('subcategory.id'))
 
     # Establish relationships between BankStatement, Category, and StatementCategory
     category = relationship('Category', backref='bank_statements')
-    statement_category = relationship('StatementCategory', backref='bank_statements')
+    subcategory = relationship('Subcategory', backref='bank_statements')
 
 
 # Define the Investments table
@@ -74,5 +90,5 @@ class ProcessedFiles(ModelBase):
     lines_loaded = Column(Integer, nullable=False)
 
 
-# Create the tables in the database
+# Create the tables in the models
 Base.metadata.create_all(engine)

@@ -2,7 +2,7 @@ from lazyutils.config.Configuration import ConfigFromEnv
 
 config = ConfigFromEnv()  # Initialize logging handler also
 
-import database.main
+import models.main
 import wallet
 
 wallet.run()
