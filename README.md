@@ -33,11 +33,15 @@ wallet
 docker build -t wallet . \
 docker run -p 5432:5432 -e CONFIG_PATH=/app/config wallet
 
+This will create the postgres database with the schema finance already created.
+
 ## Alembic
+To create your data modeling in postgres, install and run alembic, checking if in the config.ini and alembic.ini are updated accordingly with postgres database.
 alembic upgrade head
 
 ## Python
-TBD
+To tun the application you must be in the project root, with CONFIG_PATH environment set to the same project root, something simples as CONFIG_PATH=. should do the trick.
+
 
 ## Superset visualization
 TBD

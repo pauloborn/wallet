@@ -3,11 +3,11 @@ from sqlalchemy.orm import relationship
 
 from models.base import Base, engine
 
-ModelBase = Base
+BankStatementsModelBase = Base
 
 
 # Define the Banks table
-class Bank(ModelBase):
+class Bank(BankStatementsModelBase):
     __tablename__ = 'banks'
 
     id = Column(Integer, primary_key=True)
@@ -15,14 +15,14 @@ class Bank(ModelBase):
     # Add more fields if needed
 
 
-class Category(Base):
+class Category(BankStatementsModelBase):
     __tablename__ = 'category'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), unique=True, nullable=False)
 
 
-class Subcategory(Base):
+class Subcategory(BankStatementsModelBase):
     __tablename__ = 'subcategory'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
@@ -30,7 +30,7 @@ class Subcategory(Base):
 
 
 # Define the CategoryMap table
-class CategoryMap(Base):
+class CategoryMap(BankStatementsModelBase):
     __tablename__ = 'category_map'
     id = Column(Integer, primary_key=True)
     statement_name = Column(String, unique=True, nullable=False)
@@ -39,7 +39,7 @@ class CategoryMap(Base):
 
 
 # Define the BankStatements table
-class BankStatement(ModelBase):
+class BankStatement(BankStatementsModelBase):
     __tablename__ = 'bank_statements'
 
     id = Column(Integer, primary_key=True)
@@ -58,29 +58,7 @@ class BankStatement(ModelBase):
     subcategory = relationship('Subcategory', backref='bank_statements')
 
 
-# Define the Investments table
-class Investment(ModelBase):
-    __tablename__ = 'investments'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
-    type = Column(String(50), nullable=False)
-    quantity = Column(Numeric, nullable=False)
-    purchase_date = Column(Date, nullable=False)
-    purchase_price = Column(Numeric, nullable=False)
-
-
-# Define the InvestmentUpdates table
-class InvestmentUpdate(ModelBase):
-    __tablename__ = 'investment_updates'
-
-    id = Column(Integer, primary_key=True)
-    investment_id = Column(Integer, ForeignKey('investments.id'), nullable=False)
-    update_date = Column(Date, nullable=False)
-    value = Column(Numeric, nullable=False)
-
-
-class ProcessedFiles(ModelBase):
+class ProcessedFiles(BankStatementsModelBase):
     __tablename__ = 'processed_files'
 
     id = Column(Integer, primary_key=True)

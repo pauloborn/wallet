@@ -20,8 +20,9 @@ category_map = {
     "*AUTO POSTO*": ["Transportation", "Gasoline / Fuel"],
     "*Autoposto*": ["Transportation", "Gasoline / Fuel"],
     "*posto*": ["Transportation", "Gasoline / Fuel"],
+    "*Petro*": ["Transportation", "Gasoline / Fuel"],
     "*PERRETTO VIAGENS*": ["Travel and Vacation", "Flights"],
-    "*DIGISEC*": ["Work and Business", 'Business Expenses'],
+    "*DIGISEC*": ["Work and Business", "Business Expenses"],
     "*NETSHOES*": ["Personal", "Clothes"],
     "*Best Park*": ["Transportation", "Others"],
     "*REK PARKING*": ["Transportation", "Others"],
@@ -32,7 +33,24 @@ category_map = {
     "*TONICO MATERIAIS*": ["Terreiro", "Others"],
     "*Bar*": ["Food and groceries", "Dining Out"],
     "*pizza*": ["Food and groceries", "Groceries"],
-    "*restaurante*": ["Food and groceries", "Groceries"]
+    "*restaurante*": ["Food and groceries", "Groceries"],
+    "*Ifood*": ["Food and groceries", "Groceries"],
+    "*Mercado*": ["Food and groceries", "Groceries"],
+    "*Lanchonete*": ["Food and groceries", "Groceries"],
+    "*Paes*": ["Food and groceries", "Groceries"],
+    "*Madero*": ["Food and groceries", "Groceries"],
+    "*Hamd*": ["Food and groceries", "Groceries"],
+    "*The Coffee*": ["Food and groceries", "Groceries"],
+    "*Supermercado*": ["Food and groceries", "Groceries"],
+    "*Festval*": ["Food and groceries", "Groceries"],
+    "*Mikilas*": ["Food and groceries", "Groceries"],
+    "*Food*": ["Food and groceries", "Groceries"],
+    "*Sisignore*": ["Food and groceries", "Groceries"],
+    "*Gol*": ["Travel and Vacation", "Flights"],
+    "*British*": ["Travel and Vacation", "Flights"],
+    "*Airbnb*": ["Travel and Vacation", "Hotels / Accommodation"],
+    "*Miro.Com*": ["Work and Business", "Others"]
+
 }
 
 
@@ -47,17 +65,22 @@ def upsertCategoryMap():
                 catmap.category_id = category.id
                 catmap.subcategory_id = subcategory.id
             else:
-                try:
-                    session.add(CategoryMap(
-                        statement_name=key,
-                        category_id=category.id,
-                        subcategory_id=subcategory.id
-                    ))
-                except AttributeError as e:
-                    raise e
+                session.add(CategoryMap(
+                    statement_name=key,
+                    category_id=category.id,
+                    subcategory_id=subcategory.id
+                ))
 
             session.commit()
 
 
 if __name__ == '__main__':
     upsertCategoryMap()
+
+
+"""
+update finance.bank_statements set category_id = 6, subcategory_id = 36  where amount = -878;
+update finance.bank_statements set category_id = 12, subcategory_id = 57 where amount = -200 and description ilike 'Transferência enviada pelo Pix%' and category_id = 13;
+update finance.bank_statements set category_id = 6, subcategory_id = 38 where amount = -50 and description ilike 'Transferência enviada pelo Pix' and category_id = 13 and date >= '2023-01-01';
+update finance.bank_statements set category_id = 9, subcategory_id = 48 where amount = -1000 and description ilike 'Transferência enviada pelo Pix%' and description not ilike '%Conta primaria%';
+"""
