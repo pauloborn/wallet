@@ -1,9 +1,7 @@
-# contextualization/NubankDataMerging.py
-
 import csv
+import datetime
 import logging
 import os
-import datetime
 
 from sqlalchemy.orm import Session
 
@@ -12,12 +10,12 @@ from models.BankStatements import Bank, BankStatement
 from models.base import engine
 
 
-class NubankDataMerging(BankDataMerging):
+class NubankCreditCardMerging(BankDataMerging):
 
     def merge_bank_stament_data(self, csv_folder):
-        logging.info(f"Starting Nubank account statement process")
+        logging.info(f"Starting Nubank Credit Card process")
 
-        csv_files = [file for file in os.listdir(csv_folder) if file.startswith("NU_")]
+        csv_files = [file for file in os.listdir(csv_folder) if file.startswith("nubank-")]
 
         for file in csv_files:
             with Session(engine) as session:
@@ -31,26 +29,26 @@ class NubankDataMerging(BankDataMerging):
                     csvreader = csv.DictReader(csvfile)
                     lines_loaded = 0
                     for row in csvreader:
-                        date_str = row['Data']
-                        date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
+                        date_str = row['date']
+                        date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
 
-                        amount = float(row['Valor'].replace(',', '.'))
-                        description = row['Descrição']
+                        amount = -float(row['amount'])
+                        title = row['title']
 
-                        # Get the bank_id for Nubank
-                        nubank = session.query(Bank).filter_by(name='Nubank').first()
+                        # Get the bank_id for Credit
+                        credit = session.query(Bank).filter_by(name='Nubank').first()
 
                         # Get the category and subcategory for the statement
-                        category_id, subcategory_id = self.define_category(description, session)
+                        category_id, subcategory_id = self.define_category(title, session)
 
                         # Check if the statement already exists in the models
                         existing_statement = session.query(BankStatement).filter_by(
-                            bank_id=nubank.id, date=date, amount=amount, description=description, method='Account'
+                            bank_id=credit.id, date=date, amount=amount, description=title, method='Card'
                         ).first()
 
                         if existing_statement:
                             if existing_statement.category_id == category_id and existing_statement.subcategory_id == subcategory_id:
-                                logging.info(f"Skipping duplicate statement: {date}, {amount}, {description}")
+                                logging.info(f"Skipping duplicate statement: {date}, {amount}, {title}")
                             else:
                                 existing_statement.category_id = category_id
                                 existing_statement.subcategory_id = subcategory_id
@@ -58,11 +56,11 @@ class NubankDataMerging(BankDataMerging):
 
                             # Create and add a new bank statement
                             statement = BankStatement(
-                                bank_id=nubank.id,
+                                bank_id=credit.id,
                                 date=date,
                                 amount=amount,
-                                description=description,
-                                method='Account',
+                                description=title,
+                                method='Card',
                                 category_id=category_id,
                                 subcategory_id=subcategory_id
                             )
@@ -78,5 +76,3 @@ class NubankDataMerging(BankDataMerging):
 
                 # Move the processed file to the 'processed_files' folder
                 self.move_file_to_processed_folder(file_path)
-
-        logging.info("Processed all Nubank files")

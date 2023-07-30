@@ -47,6 +47,7 @@ class BankStatement(ModelBase):
     date = Column(Date, nullable=False)
     amount = Column(Numeric, nullable=False)
     description = Column(String, nullable=False)
+    method = Column(String, default='Account', nullable=False)
 
     # Add foreign keys to the Category and SubCategory tables
     category_id = Column(Integer, ForeignKey('category.id'))
