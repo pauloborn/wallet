@@ -13,12 +13,12 @@ from models.BankStatements import Bank
 
 # revision identifiers, used by Alembic.
 revision = '599e5ffeeb68'
-down_revision = '109523718053'
+down_revision = 'd57224f66148'
 branch_labels = None
 depends_on = None
 
 bank_table = Table(
-    'banks',
+    'bank',
     Bank.metadata,
     Column('id', Integer, primary_key=True),
     Column('name', String(100), nullable=False),

@@ -8,7 +8,7 @@ BankStatementsModelBase = Base
 
 # Define the Banks table
 class Bank(BankStatementsModelBase):
-    __tablename__ = 'banks'
+    __tablename__ = 'bank'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
@@ -40,10 +40,10 @@ class CategoryMap(BankStatementsModelBase):
 
 # Define the BankStatements table
 class BankStatement(BankStatementsModelBase):
-    __tablename__ = 'bank_statements'
+    __tablename__ = 'bank_statement'
 
     id = Column(Integer, primary_key=True)
-    bank_id = Column(Integer, ForeignKey('banks.id'), nullable=False)
+    bank_id = Column(Integer, ForeignKey('bank.id'), nullable=False)
     date = Column(Date, nullable=False)
     amount = Column(Numeric, nullable=False)
     description = Column(String, nullable=False)
@@ -54,12 +54,12 @@ class BankStatement(BankStatementsModelBase):
     subcategory_id = Column(Integer, ForeignKey('subcategory.id'))
 
     # Establish relationships between BankStatement, Category, and StatementCategory
-    category = relationship('Category', backref='bank_statements')
-    subcategory = relationship('Subcategory', backref='bank_statements')
+    category = relationship('Category', backref='bank_statement')
+    subcategory = relationship('Subcategory', backref='bank_statement')
 
 
 class ProcessedFiles(BankStatementsModelBase):
-    __tablename__ = 'processed_files'
+    __tablename__ = 'processed_file'
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(255), unique=True, nullable=False)
@@ -70,4 +70,4 @@ class ProcessedFiles(BankStatementsModelBase):
 
 
 # Create the tables in the models
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)

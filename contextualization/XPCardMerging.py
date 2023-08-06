@@ -6,7 +6,6 @@ import os
 from sqlalchemy.orm import Session
 
 from contextualization.BankDataMerging import BankDataMerging
-from models.BankStatements import Bank, BankStatement
 from models.base import engine
 
 
