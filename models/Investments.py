@@ -27,8 +27,8 @@ class Investment(InvestmentModelBase):
     type = Column(ENUM(InvestmentType), nullable=False)
     purchase_date = Column(Date)
     purchase_price = Column(Float, nullable=False)
+    sell_date = Column(Date), # TODO Implement when it recons that is was sold
     quantity = Column(Integer, nullable=False)
-    # total_amount = Column(Float, nullable=False)
     due_date = Column(Date)  # For TesouroDireto, RendaFixa, Compromissadas, and COE
 
     bank_id = Column(Integer, ForeignKey('bank.id'), nullable=False)
@@ -40,8 +40,9 @@ class InvestmentRentability(InvestmentModelBase):
     id = Column(Integer, primary_key=True)
     investment_id = Column(Integer, ForeignKey('investment.id'))
     date = Column(Date, nullable=False)
-    position = Column(Float, nullable=False)
-    rentability_percentage = Column(Float, nullable=False)
+    position = Column(Float, nullable=False)  # Rentability value
+    rentability = Column(Float, nullable=False)  # Rentability in %Percentage
+    rentability_value = Column(Float, nullable=False)  # Rentability value in $
 
     # Relationship with Investment model
     investment = relationship('Investment', back_populates='rentability')
@@ -65,8 +66,6 @@ class InvestmentTransaction(InvestmentModelBase):
 
     # Relationship with BankStatement model
     bankstatement = relationship('BankStatement', back_populates='transaction')
-
-
 
 # Create the tables in the models
 # InvestmentModelBase.metadata.create_all(engine)

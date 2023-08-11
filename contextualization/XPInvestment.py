@@ -4,9 +4,18 @@ import numpy as np
 from sqlalchemy.orm import Session
 
 from contextualization.BankDataMerging import BankDataMerging
-from contextualization.XPInvestmentRentability import process_tesouro_direto
+from contextualization.XPInvestmentRentability import process_tesouro_direto, process_renda_fixa
 from models.Investments import Investment, InvestmentType, InvestmentTransaction, InvestmentRentability
 from openpyxl import load_workbook
+
+
+def get_investmenttype_map(session: Session):
+    category_map = {}
+
+    for category in InvestmentType:
+        category_map[category.name] = category
+
+    return category_map
 
 
 class XPInvestmentDataMerging(BankDataMerging):
@@ -17,48 +26,32 @@ class XPInvestmentDataMerging(BankDataMerging):
         super().__init__()
         self.category_map = None
 
-    def text_to_investmenttype(self, text) -> InvestmentType:
-
-        if text == InvestmentType.TESOURO_DIRETO:
-            return InvestmentType.TESOURO_DIRETO
-        elif text == InvestmentType.RENDA_FIXA:
-            return InvestmentType.RENDA_FIXA
-        elif text == InvestmentType.FUNDOS_IMOBILIARIOS:
-            return InvestmentType.FUNDOS_IMOBILIARIOS
-        elif text == InvestmentType.COMPROMISSADAS:
-            return InvestmentType.COMPROMISSADAS
-        elif text == InvestmentType.PREVIDENCIA_PRIVADA:
-            return InvestmentType.PREVIDENCIA_PRIVADA
-        elif text == InvestmentType.FUNDOS_DE_INVESTIMENTO:
-            return InvestmentType.FUNDOS_DE_INVESTIMENTO
-        elif text == InvestmentType.COE:
-            return InvestmentType.COE
-
-        return InvestmentType.UNDEFINED
-
-    def process_investment_rows(self, rows, investmenttype: InvestmentType, file_date):
+    def process_investment_rows(self, rows, investment_type: InvestmentType, file_date) -> list:
         pd.DataFrame(rows)
         investments = []
 
-        if investmenttype is InvestmentType.TESOURO_DIRETO:
+        if investment_type is InvestmentType.TESOURO_DIRETO:
             investments.append(process_tesouro_direto(rows, file_date))
-        elif investmenttype is InvestmentType.RENDA_FIXA:
-            pass
-        elif investmenttype is InvestmentType.FUNDOS_IMOBILIARIOS:
-            pass
-        elif investmenttype is InvestmentType.COMPROMISSADAS:
-            pass
-        elif investmenttype is InvestmentType.PREVIDENCIA_PRIVADA:
-            pass
-        elif investmenttype is InvestmentType.FUNDOS_DE_INVESTIMENTO:
-            pass
-        elif investmenttype is InvestmentType.COE:
-            pass
+        elif investment_type is InvestmentType.RENDA_FIXA:
+            investments.append(process_renda_fixa(rows, file_date))
+        elif investment_type is InvestmentType.FUNDOS_IMOBILIARIOS:
+            investments.append(process_fundos_imobiliarios(rows, file_date))
+        elif investment_type is InvestmentType.COMPROMISSADAS:
+            investments.append(process_compromissadas(rows, file_date))
+        elif investment_type is InvestmentType.PREVIDENCIA_PRIVADA:
+            investments.append(process_previdencia_privada(rows, file_date))
+        elif investment_type is InvestmentType.FUNDOS_DE_INVESTIMENTO:
+            investments.append(process_fundos_de_investimento(rows, file_date))
+        elif investment_type is InvestmentType.COE:
+            investments.append(process_coe(rows, file_date))
         else:
             pass
 
+        return investments
 
     def process_investment_rentability_from_excel_file(self, excel_file_path, session: Session):
+
+        self.category_map = get_investmenttype_map(session)
 
         wb = load_workbook(filename=excel_file_path, read_only=True)
         ws = wb['Sua carteira']
@@ -76,100 +69,45 @@ class XPInvestmentDataMerging(BankDataMerging):
             if row['is_blank']:
                 continue
 
-            # Check if the row is completely with empty cells
-
-            if row[0] == InvestmentType.TESOURO_DIRETO.value:
+            if row[0] in self.category_map:
                 if current_type:
-                    # TODO Process investment_rows
-                    pass
+                    self.process_investment_rows(investment_rows, current_type, file_date)
 
-                current_type = InvestmentType.TESOURO_DIRETO
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.RENDA_FIXA.value:
-                if current_type:
-                    self.process_investment_rows(investment_rows, current_type)
-
-                current_type = InvestmentType.RENDA_FIXA
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.FUNDOS_IMOBILIARIOS.value:
-                if current_type:
-                    # TODO Process investment_rows
-                    pass
-
-                current_type = InvestmentType.FUNDOS_IMOBILIARIOS
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.COMPROMISSADAS.value:
-                if current_type:
-                    # TODO Process investment_rows
-                    pass
-
-                current_type = InvestmentType.COMPROMISSADAS
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.PREVIDENCIA_PRIVADA.value:
-                if current_type:
-                    # TODO Process investment_rows
-                    pass
-
-                current_type = InvestmentType.PREVIDENCIA_PRIVADA
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.FUNDOS_DE_INVESTIMENTO:
-                if current_type:
-                    # TODO Process investment_rows
-                    pass
-
-                current_type = InvestmentType.FUNDOS_DE_INVESTIMENTO
-                investment_rows = []
-                continue
-
-            elif row[0] == InvestmentType.COE.value:
-                if current_type:
-                    # TODO Process investment_rows
-                    pass
-
-                current_type = InvestmentType.COE
+                current_type = self.category_map[row[0]]
                 investment_rows = []
                 continue
 
             investment_rows.append(row)
 
-            # if current_type == InvestmentType.TESOURO_DIRETO:
-            # Check if is a header or the next 2 rows are empty
+        for investmenttuple in investment_rows:
+            investment = investmenttuple[0]
+            investmentrentability = investmenttuple[1]
 
-            # Tesouro Direto						R$ 12.895,62
-            #
-            # 2,9% | Pós-Fixado	Posição	% Alocação	Total aplicado	Qtd.	Disponível	Vencimento
-            # LFT mar/2025	R$ 12.895,62	2,94%	R$ 10.108,80	0,95	0,95	01/03/2025
-            #
-            #
-            #
-            # investment_id = row[0]
-            # date_str = row[1]
-            # value_str = row[2]
-            # balance_str = row[3]
-            # rentability_str = row[4]
-            # current_value_str = row[5]
-            #
-            # date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
-            # value = float(value_str.replace(',', '.'))
-            # balance = float(balance_str.replace(',', '.'))
-            # rentability = float(rentability_str.replace(',', '.'))
-            # current_value = float(current_value_str.replace(',', '.'))
+            # Check if investment already exists in the models
+            existing_investment = session.query(Investment).filter_by(
+                name=investment.name, type=investment.type, purchase_date=investment.purchase_date,
+                purchase_price=investment.purchase_price, quantity=investment.quantity, due_date=investment.due_date
+            ).first()
 
-            # Check if the investment already exists
+            if not existing_investment:
+                session.add(investment)
+                # session.commit()
+
+            # Check if investmentrentability already exists in the models
+            existing_investmentrentability = session.query(InvestmentRentability).filter_by(
+                investment_id=investment.id, date=investmentrentability.date
+                ).first()
+
+            if existing_investmentrentability:
+                existing_investmentrentability.rentability_percentage = investmentrentability.rentability_percentage
+                existing_investmentrentability.rentability_value = investmentrentability.rentability_value
+            else:
+                session.add(investmentrentability)
+
+        session.commit()
 
 
 if __name__ == '__main__':
     xpinvest = XPInvestmentDataMerging()
-    # Call process_investment_rentability_from_excel_file with Windows path 'C:\Users\paulo\Development\wallet\data\investments\PosicaoDetalhada_Jul_23.xlsx'
     xpinvest.process_investment_rentability_from_excel_file(
         'C:\\Users\\paulo\\Development\\wallet\\data\\investments\\PosicaoDetalhada_Jul_23.xlsx', None)
