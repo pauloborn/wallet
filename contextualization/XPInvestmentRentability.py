@@ -1,14 +1,21 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy.orm import Session
 
 from models.Investments import Investment, InvestmentType, InvestmentRentability
 
 
 def money(num: str):
-    return float(num.replace('R$', '').replace(',', '.'))
+    if type(num) is not float:
+        return float(num.replace('R$', '').replace('.', '').replace(',', '.').replace('%', ''))
+    else:
+        return num
 
+def num(num: str):
+    if num == 'NaN':
+        return 0
+    else:
+        return int(num)
 
 def detect_df_subheaders(rows) -> list:
     df = pd.DataFrame(rows)
@@ -32,18 +39,19 @@ def detect_df_subheaders(rows) -> list:
     return dfs
 
 
-def process_tesouro_direto(rows, file_date):
+def process_tesouro_direto(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.TESOURO_DIRETO.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.TESOURO_DIRETO,
+            investment = Investment(name=name,
+                                    type=InvestmentType.TESOURO_DIRETO,
                                     purchase_date=None,
                                     purchase_price=money(line['Total aplicado']),
-                                    quantity=int(line['Qtd.']),
-                                    due_date=datetime.strptime(line['Vencimento'], '%d/%m/%Y').date()
+                                    quantity=int(money(line['Qtd.'])),
+                                    due_date=datetime.strptime(line['Vencimento'], '%d/%m/%Y').date(),
+                                    bank_id=bank_id
                                     )
 
             investment_rentability = InvestmentRentability(investment=investment,
@@ -51,7 +59,6 @@ def process_tesouro_direto(rows, file_date):
                                                            position=money(line['Posição']),
                                                            rentability=None,
                                                            rentability_value=None
-                                                           # TODO Load from the database and calculate the rentability
                                                            )
 
             investments.append((investment, investment_rentability))
@@ -59,26 +66,26 @@ def process_tesouro_direto(rows, file_date):
         return investments
 
 
-def process_renda_fixa(rows, file_date):
+def process_renda_fixa(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.RENDA_FIXA.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.RENDA_FIXA,
+            investment = Investment(name=name,
+                                    type=InvestmentType.RENDA_FIXA,
                                     purchase_date=datetime.strptime(line['Data aplicação'], '%d/%m/%Y').date(),
                                     purchase_price=money(line['Valor aplicado']),
                                     quantity=1,
-                                    due_date=datetime.strptime(line['Data vencimento'], '%d/%m/%Y').date()
+                                    due_date=datetime.strptime(line['Data vencimento'], '%d/%m/%Y').date(),
+                                    bank_id=bank_id
                                     )
 
             investment_rentability = InvestmentRentability(investment=investment,
                                                            date=file_date,
                                                            position=money(line['Posição a mercado']),
-                                                           rentability_percentage=None,
+                                                           rentability=None,
                                                            rentability_value=None
-                                                           # TODO Load from the database and calculate the rentability
                                                            )
 
             investments.append((investment, investment_rentability))
@@ -86,18 +93,20 @@ def process_renda_fixa(rows, file_date):
     return investments
 
 
-def process_fundos_imobiliarios(rows, file_date):
+def process_fundos_imobiliarios(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.FUNDOS_IMOBILIARIOS.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.FUNDOS_IMOBILIARIOS,
+            last_price = money(line['Última cotação']) if str(line['Última cotação']).lower() != 'nan' else None
+            investment = Investment(name=name,
+                                    type=InvestmentType.FUNDOS_IMOBILIARIOS,
                                     purchase_date=file_date,
-                                    purchase_price=money(line['Última cotação']),
-                                    quantity=line['Qtd. total'],
-                                    due_date=None
+                                    purchase_price=last_price,
+                                    quantity=money(line['Qtd. total']),
+                                    due_date=None,
+                                    bank_id=bank_id
                                     )
 
             investment_rentability = InvestmentRentability(investment=investment,
@@ -105,25 +114,26 @@ def process_fundos_imobiliarios(rows, file_date):
                                                            position=money(line['Posição']),
                                                            rentability=None,
                                                            rentability_value=None
-                                                           # TODO Load from the database and calculate the rentability
                                                            )
+
             investments.append((investment, investment_rentability))
 
     return investments
 
 
-def process_compromissadas(rows, file_date):
+def process_compromissadas(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.COMPROMISSADAS.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.COMPROMISSADAS,
+            investment = Investment(name=name,
+                                    type=InvestmentType.COMPROMISSADAS,
                                     purchase_date=datetime.strptime(line['Data aplicação'], '%d/%m/%Y').date(),
                                     purchase_price=money(line['Valor aplicado']),
                                     quantity=1,
-                                    due_date=datetime.strptime(line['Data vencimento'], '%d/%m/%Y').date()
+                                    due_date=datetime.strptime(line['Data vencimento'], '%d/%m/%Y').date(),
+                                    bank_id=bank_id
                                     )
 
             investment_rentability = InvestmentRentability(investment=investment,
@@ -131,50 +141,52 @@ def process_compromissadas(rows, file_date):
                                                            position=money(line['Posição']),
                                                            rentability=None,
                                                            rentability_value=None
-                                                           # TODO Load from the database and calculate the rentability
                                                            )
+
             investments.append((investment, investment_rentability))
 
     return investments
 
 
-def process_previdencia_privada(rows, file_date):
+def process_previdencia_privada(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.PREVIDENCIA_PRIVADA.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.PREVIDENCIA_PRIVADA,
+            investment = Investment(name=name,
+                                    type=InvestmentType.PREVIDENCIA_PRIVADA,
                                     purchase_date=None,
                                     purchase_price=money(line['Valor aplicado']),
                                     quantity=1,
-                                    due_date=None
+                                    due_date=None,
+                                    bank_id=bank_id
                                     )
 
             investment_rentability = InvestmentRentability(investment=investment,
                                                            date=file_date,
                                                            position=money(line['Posição']),
-                                                           rentability=line['Rentabilidade'],
-                                                           rentability_value=line['Rentabilidade bruto']
+                                                           rentability=money(line['Rentabilidade']),
+                                                           rentability_value=money(line['Rendimento bruto'])
                                                            )
             investments.append((investment, investment_rentability))
 
     return investments
 
 
-def process_fundos_de_investimento(rows, file_date):
+def process_fundos_de_investimento(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.FUNDOS_DE_INVESTIMENTO.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.FUNDOS_DE_INVESTIMENTO,
+            investment = Investment(name=name,
+                                    type=InvestmentType.FUNDOS_DE_INVESTIMENTO,
                                     purchase_date=datetime.strptime(line['Data da cota'], '%d/%m/%Y').date(),
                                     purchase_price=money(line['Valor aplicado']),
                                     quantity=1,
-                                    due_date=None
+                                    due_date=None,
+                                    bank_id=bank_id
                                     )
 
             position = money(line['Valor líquido'])
@@ -183,25 +195,26 @@ def process_fundos_de_investimento(rows, file_date):
                                                            date=file_date,
                                                            position=position,
                                                            rentability=rentability,
-                                                           rentability_value= position * rentability
+                                                           rentability_value=position * rentability
                                                            )
             investments.append((investment, investment_rentability))
 
     return investments
 
 
-def process_coe(rows, file_date):
+def process_coe(rows, file_date, bank_id):
     investments = []
     dfs = detect_df_subheaders(rows)
     for df in dfs:
         for _, line in df.iterrows():
             name = f'{InvestmentType.COE.value} - {df.columns[0]} - {line[df.columns[0]]}'
-            investment = Investment(name,
-                                    InvestmentType.COE,
+            investment = Investment(name=name,
+                                    type=InvestmentType.COE,
                                     purchase_date=None,
                                     purchase_price=money(line['Valor aplicado']),
                                     quantity=1,
-                                    due_date=datetime.strptime(line['Vencimento'], '%d/%m/%Y').date()
+                                    due_date=datetime.strptime(line['Vencimento'], '%d/%m/%Y').date(),
+                                    bank_id=bank_id
                                     )
 
             position = money(line['Posição'])
@@ -210,9 +223,36 @@ def process_coe(rows, file_date):
                                                            date=file_date,
                                                            position=position,
                                                            rentability=rentability,
-                                                           rentability_value=money(line['Rentabilidade bruto'])
+                                                           rentability_value=money(line['Rendimento bruto'])
                                                            )
             investments.append((investment, investment_rentability))
 
     return investments
 
+
+def process_acoes(rows, file_date, bank_id):
+    investments = []
+    dfs = detect_df_subheaders(rows)
+    for df in dfs:
+        for _, line in df.iterrows():
+            name = f'{InvestmentType.ACOES.value} - {df.columns[0]} - {line[df.columns[0]]}'
+            investment = Investment(name=name,
+                                    type=InvestmentType.ACOES,
+                                    purchase_date=file_date,
+                                    purchase_price=money(line['Preço médio']),
+                                    quantity=num(line['Qtd. total']),
+                                    due_date=None,
+                                    bank_id=bank_id
+                                    )
+
+            position = money(line['Posição'])
+            rentability = money(line['Rentabilidade (%)'])
+            investment_rentability = InvestmentRentability(investment=investment,
+                                                           date=file_date,
+                                                           position=position,
+                                                           rentability=rentability,
+                                                           rentability_value=None
+                                                           )
+            investments.append((investment, investment_rentability))
+
+    return investments

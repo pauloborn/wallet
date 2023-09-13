@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
-from models.base import Base, engine
+from models.base import Base
 
 BankStatementsModelBase = Base
 
@@ -12,7 +12,9 @@ class Bank(BankStatementsModelBase):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
-    # Add more fields if needed
+
+    investment = relationship('Investment', back_populates='bank')
+    bank_statement = relationship('BankStatement', back_populates='bank')
 
 
 class Category(BankStatementsModelBase):
@@ -57,6 +59,9 @@ class BankStatement(BankStatementsModelBase):
     category = relationship('Category', backref='bank_statement')
     subcategory = relationship('Subcategory', backref='bank_statement')
 
+    bank = relationship('Bank', back_populates='bank_statement')
+    investment_transaction = relationship('InvestmentTransaction', back_populates='bank_statement')
+
 
 class ProcessedFiles(BankStatementsModelBase):
     __tablename__ = 'processed_file'
@@ -68,6 +73,3 @@ class ProcessedFiles(BankStatementsModelBase):
     end_time = Column(DateTime, nullable=True)
     lines_loaded = Column(Integer, nullable=False)
 
-
-# Create the tables in the models
-# Base.metadata.create_all(engine)

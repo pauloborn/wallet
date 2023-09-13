@@ -46,7 +46,7 @@ def upgrade() -> None:
     op.create_table('investment',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('type', postgresql.ENUM('TESOURO_DIRETO', 'RENDA_FIXA', 'FUNDOS_IMOBILIARIOS', 'COMPROMISSADAS', 'PREVIDENCIA_PRIVADA', 'FUNDOS_DE_INVESTIMENTO', 'COE', 'UNDEFINED', name='investmenttype'), nullable=False),
+    sa.Column('type', postgresql.ENUM('TESOURO_DIRETO', 'RENDA_FIXA', 'FUNDOS_IMOBILIARIOS', 'COMPROMISSADAS', 'PREVIDENCIA_PRIVADA', 'FUNDOS_DE_INVESTIMENTO', 'COE', 'ACOES', 'UNDEFINED', name='investmenttype'), nullable=False),
     sa.Column('purchase_date', sa.Date(), nullable=False),
     sa.Column('purchase_price', sa.Float(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),

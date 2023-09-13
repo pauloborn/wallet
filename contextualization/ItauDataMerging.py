@@ -30,7 +30,7 @@ class ItauDataMerging(BankDataMerging):
                         date_str, description, amount_str = line.split(';')
 
                         date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
-                        amount = -float(amount_str.replace(',', '.').strip())
+                        amount = float(amount_str.replace(',', '.').strip())
 
                         if self.build_bank_statement(
                                 session=session,

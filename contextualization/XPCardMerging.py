@@ -14,7 +14,7 @@ class XPCardCardMerging(BankDataMerging):
     def merge_bank_statement_data(self, csv_folder):
         logging.info(f"Starting XP Credit Card process")
 
-        csv_files = [file for file in os.listdir(csv_folder) if file.startswith("xp_")]
+        csv_files = [file for file in os.listdir(csv_folder) if file.startswith("xp_") or file.startswith("Fatura XP")]
 
         for file in csv_files:
             with Session(engine) as session:

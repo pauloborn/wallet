@@ -33,8 +33,8 @@ class BankDataMerging:
             )
             session.add(processed_file)
 
-    def move_file_to_processed_folder(self, file_path):
-        processed_folder = self.config['wallet']['processedfolder']
+    def move_file_to_processed_folder(self, file_path, processed_folder='processedfolder'):
+        processed_folder = self.config['wallet'][processed_folder]
         os.makedirs(processed_folder, exist_ok=True)
 
         filename = os.path.basename(file_path)
@@ -42,12 +42,13 @@ class BankDataMerging:
 
         shutil.move(file_path, destination_path)
 
-    def is_file_processed(self, filename, session):
+    @staticmethod
+    def is_file_processed(filename, session):
         processed_file = session.query(ProcessedFiles).filter_by(filename=filename, status="Processed").first()
         logging.debug(f'Checking if file was already processed {filename} - {processed_file}')
         return processed_file is not None
 
-    def define_category(self, statement_name, session: Session) -> [str,str] :
+    def define_category(self, statement_name, session: Session) -> [str, str]:
         if self.category_map is None:
             self.category_map = {}
             for cat in session.query(CategoryMap).all():

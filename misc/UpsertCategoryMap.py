@@ -1,9 +1,17 @@
 from sqlalchemy.orm import Session
 
-from models.BankStatements import CategoryMap, Category, Subcategory
+from contextualization.BankDataMerging import BankDataMerging
+from models.BankStatements import CategoryMap, Category, Subcategory, BankStatement
+import models.Investments
 from models.base import engine
 
 category_map = {
+    "*OPERAÇÕES EM BOLSA*": ["Savings and Investments", "Investment Contributions"],
+    "COMPRA *": ["Savings and Investments", "Investment Contributions"],
+    "APLICAÇÃO COMPROMISSADA*": ["Savings and Investments", "Investment Contributions"],
+    "OPERAÇÕES EM BOLSA*": ["Savings and Investments", "Investment Contributions"],
+    "Pagamento recebido*": ["Debt Repayment", "Credit Card Payments"],
+
     "*Cartão Nubank*": ["Debt Repayment", "Credit Card Payments"],
     "*Ana Claudia Condeixa De França*": ["Health and Sports", "Tennis"],
     "*Anaclaudiacondeix*": ["Health and Sports", "Tennis"],
@@ -49,7 +57,17 @@ category_map = {
     "*Gol*": ["Travel and Vacation", "Flights"],
     "*British*": ["Travel and Vacation", "Flights"],
     "*Airbnb*": ["Travel and Vacation", "Hotels / Accommodation"],
-    "*Miro.Com*": ["Work and Business", "Others"]
+    "*Miro.Com*": ["Work and Business", "Others"],
+
+    "*ARABY CULINARIA SIRIA*": ["Food and groceries", "Groceries"],
+    "*Uber*": ["Transportation", "Others"],
+    "*Sergio Atsuchi Endo*": ["Food and groceries", "Groceries"],
+    "*CLEUSA APARECIDA AGUIAR*": ["Housing", "Utilities"],
+
+    "*rendimento*": ['Income', 'Revenue'],
+    "*dividendo*": ['Income', 'Dividends'],
+    "*JUROS S/ CAPITAL*": ['Income', 'Revenue'],
+    "*Pgto Juros*": ['Income', 'Revenue']
 
 }
 
@@ -74,8 +92,25 @@ def upsertCategoryMap():
             session.commit()
 
 
+def reclassify_categories():
+    bankmerging = BankDataMerging()
+
+    with Session(engine) as session:
+        for stmt in session.query(BankStatement).all():
+            category_id, subcategory_id = bankmerging.define_category(stmt.description, session)
+
+            stmt.category_id = category_id
+            stmt.subcategory_id = subcategory_id
+
+        session.commit()
+
+
 if __name__ == '__main__':
     upsertCategoryMap()
+    reclassify_categories()
+
+
+# TODO Implement Investment View in SuperSet
 
 
 """
