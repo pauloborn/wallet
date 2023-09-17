@@ -17,7 +17,7 @@ def investmenttype_map():
     return category_map
 
 
-def update_retability(session):
+def update_rentability(session):
     query = """
 
         with new_investment_rentability as (
@@ -40,7 +40,7 @@ def update_retability(session):
         from new_investment_rentability
         where 
             new_investment_rentability.position_before is not null
-            and investment_rentability.id = new_investment_rentability.id
+            and investment_rentability.id = new_investment_rentability.id;
 
     """
 

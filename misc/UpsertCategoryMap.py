@@ -110,8 +110,6 @@ if __name__ == '__main__':
     reclassify_categories()
 
 
-# TODO Implement Investment View in SuperSet
-
 
 """
 update finance.bank_statements set category_id = 6, subcategory_id = 36  where amount = -878;

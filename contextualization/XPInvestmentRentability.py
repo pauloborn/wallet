@@ -190,7 +190,7 @@ def process_fundos_de_investimento(rows, file_date, bank_id):
                                     )
 
             position = money(line['Valor líquido'])
-            rentability = money(line['Rentabilidade'])
+            rentability = money(line['Rentabilidade']) / 100
             investment_rentability = InvestmentRentability(investment=investment,
                                                            date=file_date,
                                                            position=position,
@@ -246,7 +246,7 @@ def process_acoes(rows, file_date, bank_id):
                                     )
 
             position = money(line['Posição'])
-            rentability = money(line['Rentabilidade (%)'])
+            rentability = money(line['Rentabilidade (%)']) / 100
             investment_rentability = InvestmentRentability(investment=investment,
                                                            date=file_date,
                                                            position=position,

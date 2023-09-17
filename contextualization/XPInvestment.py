@@ -148,7 +148,7 @@ class XPInvestmentDataMerging(BankDataMerging):
                 # Move the processed file to the 'investmentprocessedfolder' folder
                 self.move_file_to_processed_folder(file_path, 'investmentprocessedfolder')
 
-            InvestmentsFactory.update_retability(session)
+            InvestmentsFactory.update_rentability(session)
 
             session.commit()
 
