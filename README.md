@@ -1,4 +1,17 @@
-# wallet
+# Wallet 
+
+This project aims to automatize my bank statements from Nubank, Itau and XP, considering expenses from cards and accounts transactions that must be seen in the same database.
+The same is for investments, but only XP is implemented. Due to lack of open APIs, I depend on report files to be uploaded to the file system.
+If you want to use, include your files in the data folder, with specific starting names:
+
+Itau bank statement: "Extrato Conta Corrente-%.txt" \
+Nubank bank statement: "NU_%.csv" \
+Nubank card statement: "nubank-%.csv" \
+XP card statement: "Fatura XP%.csv" \
+XP investments rentability: "PosicaoDetalhada_%.xlsx" \
+
+This project needs a postgres version 15 to work and you can use the dockerfile provided to setup.
+For setup, use the steps described below.
 
 ## Project structure
 ````bash
@@ -44,4 +57,4 @@ To tun the application you must be in the project root, with CONFIG_PATH environ
 
 
 ## Superset visualization
-TBD
+All the database I used superset to create my finance view, but you can use any BI visualization tools.
