@@ -3,19 +3,8 @@ from datetime import datetime
 import pandas as pd
 
 from models.Investments import Investment, InvestmentType, InvestmentRentability
+from misc.convertors import money, num
 
-
-def money(num: str):
-    if type(num) is not float:
-        return float(num.replace('R$', '').replace('.', '').replace(',', '.').replace('%', ''))
-    else:
-        return num
-
-def num(num: str):
-    if num == 'NaN':
-        return 0
-    else:
-        return int(num)
 
 def detect_df_subheaders(rows) -> list:
     df = pd.DataFrame(rows)
