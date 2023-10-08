@@ -67,7 +67,17 @@ category_map = {
     "*rendimento*": ['Income', 'Revenue'],
     "*dividendo*": ['Income', 'Dividends'],
     "*JUROS S/ CAPITAL*": ['Income', 'Revenue'],
-    "*Pgto Juros*": ['Income', 'Revenue']
+    "*Pgto Juros*": ['Income', 'Revenue'],
+
+    "*IDEAL GAS*": ["Housing", "Home Maintenance"],
+    "*Pagamento de boleto efetuado - BANCO XP S/A*": ["Debt Repayment", "Credit Card Payments"],
+    "PAG*TONICOMATERIAISDE": ["Housing", "Home Maintenance"],
+    "PAG*SATELITECOMERCIAL": ["Housing", "Home Maintenance"],
+    "ESTADO DISTRIBUIDORA*": ["Food and groceries", "Groceries"],
+    "Arena Grecia*": ["Health and Sports", "Tennis"],
+    "*MADEIRAMADEIRA*": ["Housing", "Home Maintenance"],
+    "3 IRMAOS PANIF*": ["Food and groceries", "Groceries"],
+    "Google Disney Mobile": ["Entertainment", "Subscriptions"]
 
 }
 
