@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from contextualization.BankDataMerging import BankDataMerging
 from models.base import engine
+from misc.convertors import money, num
 
 
 class XPCardCardMerging(BankDataMerging):
@@ -29,22 +30,27 @@ class XPCardCardMerging(BankDataMerging):
                     csvreader = csv.DictReader(csvfile, delimiter=';')
                     lines_loaded = 0
                     for row in csvreader:
-                        date_str = str(row['Data'])
-                        date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
+                        try:
+                            date_str = str(row['Data'])
+                            date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
 
-                        establishment = str(row['Estabelecimento'])
-                        amount_str = str(row['Valor'])
-                        amount = -float(amount_str.replace('R$', '').replace(',', '.').strip())
+                            establishment = str(row['Estabelecimento'])
+                            amount_str = str(row['Valor'])
+                            amount = -money(amount_str)
 
-                        if self.build_bank_statement(
-                            session=session,
-                            bankname='XP',
-                            date=date,
-                            amount=amount,
-                            description=establishment,
-                            method='Card'
-                        ):
-                            lines_loaded += 1
+                            if self.build_bank_statement(
+                                session=session,
+                                bankname='XP',
+                                date=date,
+                                amount=amount,
+                                description=establishment,
+                                method='Card'
+                            ):
+                                lines_loaded += 1
+
+                        except ValueError as ve:
+                            logging.error(f"Unable to process line with values: {row}")
+                            raise ValueError
 
                     # Update the list of processed files
                     self.update_processed_file(file_path, 'Processed', lines_loaded, session)
