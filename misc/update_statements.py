@@ -21,7 +21,7 @@ def update_statements(file_csv: str):
         with Session(engine) as session:
             category_view = CategoryView(session)
 
-            with open(file_csv, 'r', newline='') as csvfile:
+            with open(file_csv, 'r', newline='', encoding='utf-8-sig') as csvfile:
                 csv_reader = csv.DictReader(csvfile, delimiter=';')
 
                 for row in csv_reader:
@@ -52,5 +52,5 @@ def update_statements(file_csv: str):
 
 
 if __name__ == '__main__':
-    file_csv = "C:\\Users\\paulo\\Development\\wallet\\data\\misc\\20231008_150422.csv"
+    file_csv = "C:\\Users\\paulo\\Development\\wallet\\data\\misc\\20231106_005258.csv"
     update_statements(file_csv)
